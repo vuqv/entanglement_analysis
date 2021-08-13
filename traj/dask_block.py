@@ -1,38 +1,21 @@
-"""
-The length of loop and open segment >=10 (i1-i2 and j1-j2>=10)
-I don't know why authors used this criteria but just use this.
-
-usage: python v3_pre_compute_numba.py PDB_ID
-"""
-import argparse
-import itertools
-
+ 
 import MDAnalysis as mda
 import numpy as np
-from numba import njit
+import pandas as pd
+import matplotlib.pyplot as plt
+# %matplotlib inline
+import itertools
+from multiprocessing import cpu_count
 
-# parser args
-parser = argparse.ArgumentParser(description="test arg")
-parser.add_argument('-top', '-p', type=str, help='Topology')
-parser.add_argument('-traj', '-f', type=str, help='Trajectory')
-args = parser.parse_args()
+import dask
+import dask.multiprocessing
+from dask.distributed import Client
 
-# pdb = sys.argv[1]
-len_seg = 10  # predefine minimum segment length, |j-i| >=len_seg
-# begin_time = time.time()
+n_jobs = cpu_count()
 
-"""
-note on numba extension:
-@njit= @jit(nopython=True) this will boost the performance dramatically
-fastmath=True: in this function (example) the reduction can be vectorized as floating point association is permitted.
-argument parallel=True used with prange will be consider when working with trajectories where prange use to parallel for 
-frame, in current situation, it is slower
-since split threads and then waiting for result, joint the results...
-@njit(fastmath=True, parallel=True)
-"""
+len_seg = 10
 
 
-@njit(fastmath=True)
 def cal_gc_ij(R_diff_3d, dR_cross_3d, _i1, _i2, _j1, _j2):
     """
     This function calculates the double integral (4)
@@ -54,10 +37,8 @@ def cal_gc_ij(R_diff_3d, dR_cross_3d, _i1, _i2, _j1, _j2):
     _gc_ij = _gc_ij / (4 * np.pi)
     return _gc_ij, _i1, _i2, _j1, _j2
 
-
-def calculation_single_frame(raw_positions):
-
-
+def calculation_single_frame(atomgroup):
+    raw_positions = atomgroup.positions
     # Calculate average positions and bond vectors in eq (2,3)
     ave_positions = 0.5 * (raw_positions[:-1, :] + raw_positions[1:, :])
     bond_vectors = - (raw_positions[:-1, :] - raw_positions[1:, :])
@@ -92,27 +73,57 @@ def calculation_single_frame(raw_positions):
     """In for loop, we add 1 because the right value of range function in python does not count"""
     for (i1, i2) in [(i1, i2) for i1 in range(N - len_seg + 1) for i2 in range(i1 + len_seg, N + 1)]:
         for (j1, j2) in [(j1, j2) for j1 in range(N - len_seg + 1) for j2 in range(j1 + len_seg, N + 1)]:
-            if Distance_pair[i1, i2] < 9.0 and ((j1 < i1 and j2 < i1) or (j1 > i2 and j2 > i2)):
+            if Distance_pair[i1, i2] <= 9.0 and ((j1 < i1 and j2 < i1) or (j1 > i2 and j2 > i2)):
                 res = cal_gc_ij(R_diff_3d, dR_cross_3d, i1, i2, j1, j2)
                 if final_G <= np.abs(res[0]):
                     final_G, IDX_i1, IDX_i2, IDX_j1, IDX_j2 = np.abs(res[0]), res[1], res[2], res[3], res[4]
 
-    if final_G == 0:
-        return final_G, 0, 0, 0, 0
-    else:
-        return final_G, IDX_i1, IDX_i2, IDX_j1, IDX_j2
+    # return final_G, IDX_i1, IDX_i2, IDX_j1, IDX_j2
+    return final_G
 
 
-if __name__ == "__main__":
-    u = mda.Universe(args.top, args.traj)
-    ca_atoms = u.select_atoms("name CA")
-    resnames = ca_atoms.resnames
-    resids = ca_atoms.resids
-    for ts in u.trajectory:
-        positions = ca_atoms.positions
+@dask.delayed
+def analyze_block(blockslice, func, *args, **kwargs):
+    result = []
+    for ts in u.trajectory[blockslice.start:blockslice.stop]:
+        A = func(*args, **kwargs)
+        result.append(A)
+    return result
 
-        g, i1, i2, j1, j2 = calculation_single_frame(positions)
-        if g ==0:
-            print(f'{ts.frame:8d} {g : .3f}')
-        else:
-            print(f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])')
+
+
+u = mda.Universe('ash1.pdb', '10frame.dcd')
+ca_atoms = u.select_atoms("name CA")
+resnames = ca_atoms.resnames
+resids = ca_atoms.resids
+
+n_frames = u.trajectory.n_frames
+n_blocks = n_jobs   #  it can be any realistic value (0 < n_blocks <= n_jobs)
+
+n_frames_per_block = n_frames // n_blocks
+blocks = [range(i * n_frames_per_block, (i + 1) * n_frames_per_block) for i in range(n_blocks-1)]
+blocks.append(range((n_blocks - 1) * n_frames_per_block, n_frames))
+
+
+
+
+
+jobs = []
+for bs in blocks:
+    jobs.append(analyze_block(bs,
+                              calculation_single_frame,
+                              ca_atoms))
+jobs = dask.delayed(jobs)
+results = jobs.compute()
+result = np.concatenate(results)
+print(result)
+# if __name__ == '__main__':
+
+#     client = Client(n_workers=n_jobs)
+#     job_list = []
+#     for frame in u.trajectory:
+#         print(frame)
+#         job_list.append(dask.delayed(calculation_single_frame(raw_positions=ca_atoms.positions)))
+
+#     result = dask.compute(job_list)
+#     print(result)
