@@ -120,6 +120,6 @@ if __name__ == "__main__":
                     f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) \
                     ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])\n')
                 f.flush()
-    end_time = time.time()
-    total_run_time = end_time - begin_time
-    f.write(f'Total execution time: {total_run_time / 60.0:.3f} mins\n')
+        end_time = time.time()
+        total_run_time = end_time - begin_time
+        f.write(f'Total execution time: {total_run_time / 60.0:.3f} mins\n')
