@@ -6,7 +6,7 @@ usage: python ent_calculation.py PDB_ID
 """
 import argparse
 import itertools
-
+import time
 import MDAnalysis as mda
 import numpy as np
 from numba import njit
@@ -21,7 +21,7 @@ args = parser.parse_args()
 
 # pdb = sys.argv[1]
 len_seg = 10  # predefine minimum segment length, |j-i| >=len_seg
-# begin_time = time.time()
+
 
 """
 note on numba extension:
@@ -104,6 +104,7 @@ def calculation_single_frame(raw_positions):
 
 
 if __name__ == "__main__":
+    begin_time = time.time()
     u = mda.Universe(args.top, args.traj)
     ca_atoms = u.select_atoms("name CA")
     resnames = ca_atoms.resnames
@@ -114,12 +115,13 @@ if __name__ == "__main__":
 
             g, i1, i2, j1, j2 = calculation_single_frame(positions)
             if g == 0:
-                # print(f'{ts.frame:8d} {g : .3f}')
                 f.write(f'{ts.frame:8d} {g : .3f}\n')
                 f.flush()
             else:
                 f.write(
-                    f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])\n')
+                    f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) \
+                    ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])\n')
                 f.flush()
-                # print(
-                #     f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])')
+    end_time = time.time()
+    total_run_time = end_time - begin_time
+    print(f'Total execution time: {total_run_time / 60.0:.3f} mins')
