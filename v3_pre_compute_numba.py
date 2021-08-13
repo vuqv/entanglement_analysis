@@ -107,12 +107,18 @@ if __name__ == "__main__":
     ca_atoms = u.select_atoms("name CA")
     resnames = ca_atoms.resnames
     resids = ca_atoms.resids
-    for ts in u.trajectory[args.begin:args.end]:
-        positions = ca_atoms.positions
+    with open(f'res_{args.begin}_{args.end}','w') as f:
+        for ts in u.trajectory[args.begin:args.end]:
+            positions = ca_atoms.positions
 
-        g, i1, i2, j1, j2 = calculation_single_frame(positions)
-        if g == 0:
-            print(f'{ts.frame:8d} {g : .3f}')
-        else:
-            print(
-                f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])')
+            g, i1, i2, j1, j2 = calculation_single_frame(positions)
+            if g == 0:
+                # print(f'{ts.frame:8d} {g : .3f}')
+                f.write(f'{ts.frame:8d} {g : .3f}\n')
+                f.flush()
+            else:
+                f.write(
+                    f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])\n')
+                f.flush()
+                # print(
+                #     f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])')
