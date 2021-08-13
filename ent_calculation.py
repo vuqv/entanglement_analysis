@@ -1,8 +1,6 @@
 """
 The length of loop and open segment >=10 (i1-i2 and j1-j2>=10)
 I don't know why authors used this criteria but just use this.
-
-usage: python ent_calculation.py PDB_ID
 """
 import argparse
 import itertools
@@ -124,4 +122,4 @@ if __name__ == "__main__":
                 f.flush()
     end_time = time.time()
     total_run_time = end_time - begin_time
-    print(f'Total execution time: {total_run_time / 60.0:.3f} mins')
+    f.write(f'Total execution time: {total_run_time / 60.0:.3f} mins\n')
