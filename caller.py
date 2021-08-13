@@ -1,3 +1,9 @@
+"""
+script to split into multiple calculation.
+subprocess.Popen(): call threads without waiting while run() will wait for output before run next thread
+here, we may consider to split trajectory into multiple part because storage is larger than memory
+using mdconvert to split
+"""
 import argparse
 from subprocess import Popen
 
