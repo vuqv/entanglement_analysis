@@ -2,7 +2,7 @@
 The length of loop and open segment >=10 (i1-i2 and j1-j2>=10)
 I don't know why authors used this criteria but just use this.
 
-usage: python v3_pre_compute_numba.py PDB_ID
+usage: python ent_calculation.py PDB_ID
 """
 import argparse
 import itertools

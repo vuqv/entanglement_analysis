@@ -2,7 +2,7 @@
 The length of loop and open segment >=10 (i1-i2 and j1-j2>=10)
 I don't know why authors used this criteria but just use this.
 
-usage: python v3_pre_compute_numba.py PDB_ID
+usage: python ent_calculation.py PDB_ID
 """
 import argparse
 import itertools
@@ -15,8 +15,8 @@ from numba import njit
 parser = argparse.ArgumentParser(description="test arg")
 parser.add_argument('-top', '-p', type=str, help='Topology')
 parser.add_argument('-traj', '-f', type=str, help='Trajectory')
-parser.add_argument('-begin', '-b', type=int, help='Trajectory', default = 0)
-parser.add_argument('-end', '-e', type=int, help='Trajectory', default = -1)
+parser.add_argument('-begin', '-b', type=int, help='Trajectory', default=0)
+parser.add_argument('-end', '-e', type=int, help='Trajectory', default=-1)
 args = parser.parse_args()
 
 # pdb = sys.argv[1]
@@ -55,6 +55,7 @@ def cal_gc_ij(R_diff_3d, dR_cross_3d, _i1, _i2, _j1, _j2):
             _gc_ij += np.dot(R_diff_3d[i, j, :] / np.linalg.norm(R_diff_3d[i, j, :]) ** 3, dR_cross_3d[i, j, :])
     _gc_ij = _gc_ij / (4 * np.pi)
     return _gc_ij, _i1, _i2, _j1, _j2
+
 
 def calculation_single_frame(raw_positions):
     # Calculate average positions and bond vectors in eq (2,3)
@@ -107,7 +108,7 @@ if __name__ == "__main__":
     ca_atoms = u.select_atoms("name CA")
     resnames = ca_atoms.resnames
     resids = ca_atoms.resids
-    with open(f'res_{args.begin}_{args.end}','w') as f:
+    with open(f'res_{args.begin}_{args.end}', 'w') as f:
         for ts in u.trajectory[args.begin:args.end]:
             positions = ca_atoms.positions
 
