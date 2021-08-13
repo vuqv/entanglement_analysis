@@ -15,6 +15,8 @@ from numba import njit
 parser = argparse.ArgumentParser(description="test arg")
 parser.add_argument('-top', '-p', type=str, help='Topology')
 parser.add_argument('-traj', '-f', type=str, help='Trajectory')
+parser.add_argument('-begin', '-b', type=int, help='Trajectory', default = 0)
+parser.add_argument('-end', '-e', type=int, help='Trajectory', default = -1)
 args = parser.parse_args()
 
 # pdb = sys.argv[1]
@@ -54,10 +56,7 @@ def cal_gc_ij(R_diff_3d, dR_cross_3d, _i1, _i2, _j1, _j2):
     _gc_ij = _gc_ij / (4 * np.pi)
     return _gc_ij, _i1, _i2, _j1, _j2
 
-
 def calculation_single_frame(raw_positions):
-
-
     # Calculate average positions and bond vectors in eq (2,3)
     ave_positions = 0.5 * (raw_positions[:-1, :] + raw_positions[1:, :])
     bond_vectors = - (raw_positions[:-1, :] - raw_positions[1:, :])
@@ -108,11 +107,12 @@ if __name__ == "__main__":
     ca_atoms = u.select_atoms("name CA")
     resnames = ca_atoms.resnames
     resids = ca_atoms.resids
-    for ts in u.trajectory:
+    for ts in u.trajectory[args.begin:args.end]:
         positions = ca_atoms.positions
 
         g, i1, i2, j1, j2 = calculation_single_frame(positions)
-        if g ==0:
+        if g == 0:
             print(f'{ts.frame:8d} {g : .3f}')
         else:
-            print(f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])')
+            print(
+                f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])')
