@@ -1,0 +1,23 @@
+There are 76 residues in 1ubq.pdb
+final_G, IDX_i1, IDX_i2, j1, j2
+C-term:  0.15 0 14 15 75
+C-term:  0.23 0 61 62 75
+C-term:  0.26 1 61 62 75
+C-term:  0.26 4 42 43 75
+C-term:  0.27 5 65 66 75
+N-term:  0.37 5 65 0 4
+N-term:  0.40 7 67 0 6
+N-term:  0.47 11 65 0 10
+Total execution time: 0.131 mins
+(base) qvuvan@masli6:~/src/linking_number/performance_check$ python pre_compute_array.py 
+There are 76 residues in 1ubq.pdb
+C-term:  0.15 0 14 15 75
+C-term:  0.23 0 61 62 75
+C-term:  0.26 1 61 62 75
+C-term:  0.26 4 42 43 75
+C-term:  0.27 5 65 66 75
+N-term:  0.37 5 65 0 4
+N-term:  0.40 7 67 0 6
+N-term:  0.47 11 65 0 10
+Total execution time: 0.030 mins
+ 
