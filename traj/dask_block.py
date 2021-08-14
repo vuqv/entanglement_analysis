@@ -17,19 +17,6 @@ len_seg = 10
 
 
 def cal_gc_ij(R_diff_3d, dR_cross_3d, _i1, _i2, _j1, _j2):
-    """
-    This function calculates the double integral (4)
-    Baiesi, M., Orlandini, E., Seno, F., & Trovato, A. (2017).
-    Exploring the correlation between the folding rates of proteins and the entanglement of their native states.
-    Journal of Physics A: Mathematical and Theoretical, 50(50). https://doi.org/10.1088/1751-8121/aa97e7
-    :param R_diff_3d: (3D array) 3D array of Ri-Rj
-    :param dR_cross_3d: (3D array) dRi-dRj
-    :param _i1: (int) the first index of the loop
-    :param _i2: (int) the second index of the loop
-    :param _j1: (int) the first index of open segment
-    :param _j2: (int) the second index of open segment
-    :return: (float) |G|_{ij}
-    """
     _gc_ij = 0.0
     for i in range(_i1, _i2):
         for j in range(_j1, _j2):
@@ -39,16 +26,10 @@ def cal_gc_ij(R_diff_3d, dR_cross_3d, _i1, _i2, _j1, _j2):
 
 def calculation_single_frame(atomgroup):
     raw_positions = atomgroup.positions
-    # Calculate average positions and bond vectors in eq (2,3)
     ave_positions = 0.5 * (raw_positions[:-1, :] + raw_positions[1:, :])
     bond_vectors = - (raw_positions[:-1, :] - raw_positions[1:, :])
     N = len(ave_positions)
     nAtoms = len(raw_positions)
-
-    """
-    Precompute pair-wise matrix of R and dR
-    when need to call, e.g Ri - Rj, just get element R_diff_3d[i,j,:]
-    """
 
     pair_array = np.asarray(list(itertools.product(ave_positions, ave_positions)))
     R_diff = pair_array[:, 0, :] - pair_array[:, 1, :]
@@ -62,12 +43,6 @@ def calculation_single_frame(atomgroup):
     pair_array = np.asarray(list(itertools.product(raw_positions, raw_positions)))
     Distance_diff = pair_array[:, 0, :] - pair_array[:, 1, :]
     Distance_pair = np.linalg.norm(Distance_diff, axis=1).reshape(nAtoms, nAtoms)
-
-    """
-     main loop, looking for all contact pairs (i_ loop) and 
-     for each contact, looking for all segment possibility (j loop) and calculate Gij for that pair.
-     If Gij > previous Gij, printout.
-    """
     final_G = 0
     IDX_i1, IDX_i2, IDX_j1, IDX_j2 = None, None, None, None
     """In for loop, we add 1 because the right value of range function in python does not count"""
@@ -105,7 +80,7 @@ blocks = [range(i * n_frames_per_block, (i + 1) * n_frames_per_block) for i in r
 blocks.append(range((n_blocks - 1) * n_frames_per_block, n_frames))
 
 
-
+Client
 
 
 jobs = []

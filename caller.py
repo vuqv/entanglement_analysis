@@ -6,6 +6,7 @@ using mdconvert to split
 """
 import argparse
 from subprocess import Popen
+import subprocess
 
 import MDAnalysis as mda
 
@@ -25,8 +26,15 @@ n_frames_per_block = n_frames // n_blocks
 blocks = [range(i * n_frames_per_block, (i + 1) * n_frames_per_block) for i in range(n_blocks - 1)]
 blocks.append(range((n_blocks - 1) * n_frames_per_block, n_frames))  # remaining frames
 print(blocks)
-
+jobs = []
+jobs_id = []
 for block in blocks:
     cmd = ['python', 'ent_calculation.py', '-p', args.top,
            '-f', args.traj, '-b', str(block.start), '-e', str(block.stop)]
-    Popen(cmd)
+    job = Popen(cmd)
+    jobs.append(job)
+    
+# wait until all jobs finish
+for job in jobs:
+    job.wait()
+    

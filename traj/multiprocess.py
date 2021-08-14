@@ -11,11 +11,6 @@ import multiprocessing
 from multiprocessing import Pool
 from functools import partial
 
-
-# import dask
-# import dask.multiprocessing
-# from dask.distributed import Client
-
 n_jobs = cpu_count()
 
 len_seg = 10
@@ -89,17 +84,7 @@ def calculation_single_frame(frame_index, atomgroup):
     return final_G
 
 
-# @dask.delayed
-# def analyze_block(blockslice, func, *args, **kwargs):
-#     result = []
-#     for ts in u.trajectory[blockslice.start:blockslice.stop]:
-#         A = func(*args, **kwargs)
-#         result.append(A)
-#     return result
-
-
-
-u = mda.Universe('ash1.pdb', '10frame.dcd')
+u = mda.Universe('ash1.pdb', 'ash1_subtrajectory_500_frames.xtc')
 ca_atoms = u.select_atoms("name CA")
 resnames = ca_atoms.resnames
 resids = ca_atoms.resids
@@ -109,39 +94,8 @@ run_per_frame = partial(calculation_single_frame,
                         atomgroup=ca_atoms,
                         )
 
-frame_values = np.arange(u.trajectory.n_frames)
+frame_values = np.arange(10)
 with Pool(n_jobs) as worker_pool:
     result = worker_pool.map(run_per_frame, frame_values)
 result = np.asarray(result).T
 print(result)
-
-# n_frames = u.trajectory.n_frames
-# n_blocks = n_jobs   #  it can be any realistic value (0 < n_blocks <= n_jobs)
-
-# n_frames_per_block = n_frames // n_blocks
-# blocks = [range(i * n_frames_per_block, (i + 1) * n_frames_per_block) for i in range(n_blocks-1)]
-# blocks.append(range((n_blocks - 1) * n_frames_per_block, n_frames))
-
-
-
-
-
-# jobs = []
-# for bs in blocks:
-#     jobs.append(analyze_block(bs,
-#                               calculation_single_frame,
-#                               ca_atoms))
-# jobs = dask.delayed(jobs)
-# results = jobs.compute()
-# result = np.concatenate(results)
-# print(result)
-# if __name__ == '__main__':
-
-#     client = Client(n_workers=n_jobs)
-#     job_list = []
-#     for frame in u.trajectory:
-#         print(frame)
-#         job_list.append(dask.delayed(calculation_single_frame(raw_positions=ca_atoms.positions)))
-
-#     result = dask.compute(job_list)
-#     print(result)
