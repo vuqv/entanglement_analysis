@@ -107,7 +107,7 @@ if __name__ == "__main__":
     ca_atoms = u.select_atoms("name CA")
     resnames = ca_atoms.resnames
     resids = ca_atoms.resids
-    with open(f'res_{args.begin}_{args.end}', 'w') as f:
+    with open(f'temp/res_{args.begin}_{args.end}', 'w') as f:
         for ts in u.trajectory[args.begin:args.end]:
             positions = ca_atoms.positions
 
@@ -122,4 +122,4 @@ if __name__ == "__main__":
                 f.flush()
         end_time = time.time()
         total_run_time = end_time - begin_time
-        f.write(f'Total execution time: {total_run_time / 60.0:.3f} mins\n')
+        f.write(f'#REPORT: Total execution time: {total_run_time / 60.0:.3f} mins\n')
