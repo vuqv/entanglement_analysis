@@ -2,10 +2,10 @@
 
 for example: python v4_pre_compute_numba.py 1ubq.pdb
 
-* v3: 
+* main program: 
    i2-i1>=10 and j2-j1 >=10
   
-* v4: 
+* v4_precomputed_numba.py: 
     i2-i1 >= 1 and j2-j1 >= 1
   
 
@@ -13,3 +13,9 @@ v4 is more general than v3 but v3 is consistence with reported and faster than v
 
 Notes about |G|c values:
 G>=1: entanglement exist (see original paper for details)
+
+For single frame (pdb file), use single_frame.py for short and more detailed
+
+For trajectory, run caller.py, which will automatically divided trajectory in multiple parts
+and call ent_calculations for each part (multiple frames)
+./run_caller.sh is perfect for short, but you need to modify the input params.
