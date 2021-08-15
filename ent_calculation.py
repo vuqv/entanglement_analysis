@@ -107,19 +107,29 @@ if __name__ == "__main__":
     ca_atoms = u.select_atoms("name CA")
     resnames = ca_atoms.resnames
     resids = ca_atoms.resids
-    with open(f'temp/res_{args.begin}_{args.end}', 'w') as f:
-        for ts in u.trajectory[args.begin:args.end]:
-            positions = ca_atoms.positions
+    n_frames = u.trajectory.n_frames
+    print(f"there are {n_frames} frames in trajectory")
+    
+    if args.top == args.traj:
+        positions = ca_atoms.positions
+        g, i1, i2, j1, j2 = calculation_single_frame(positions)
+        print(
+                    f'{g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) \
+                    ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])')
+    else:
+        with open(f'temp/res_{args.begin}_{args.end}', 'w') as f:
+            for ts in u.trajectory[args.begin:args.end]:
+                positions = ca_atoms.positions
 
-            g, i1, i2, j1, j2 = calculation_single_frame(positions)
-            if g == 0:
-                f.write(f'{ts.frame:8d} {g : .3f}\n')
-                f.flush()
-            else:
-                f.write(
-                    f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) \
-                    ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])\n')
-                f.flush()
-        end_time = time.time()
-        total_run_time = end_time - begin_time
-        f.write(f'#REPORT: Total execution time: {total_run_time / 60.0:.3f} mins\n')
+                g, i1, i2, j1, j2 = calculation_single_frame(positions)
+                if g == 0:
+                    f.write(f'{ts.frame:8d} {g : .3f}\n')
+                    f.flush()
+                else:
+                    f.write(
+                        f'{ts.frame:8d} {g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) \
+                        ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])\n')
+                    f.flush()
+            end_time = time.time()
+            total_run_time = end_time - begin_time
+            f.write(f'#REPORT: Total execution time: {total_run_time / 60.0:.3f} mins\n')
