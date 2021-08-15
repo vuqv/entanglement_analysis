@@ -1,10 +1,15 @@
 """
+Notes on code:
+well, when I wrote this function, only God and I know what it does (April 2021).
+Now- Aug 2021- only God know. God dammit ...
+
 The length of loop and open segment >=10 (i1-i2 and j1-j2>=10)
 I don't know why authors used this criteria but just use this.
 """
 import argparse
 import itertools
 import time
+
 import MDAnalysis as mda
 import numpy as np
 from numba import njit
@@ -15,20 +20,21 @@ parser.add_argument('-top', '-p', type=str, help='Topology')
 parser.add_argument('-traj', '-f', type=str, help='Trajectory')
 parser.add_argument('-begin', '-b', type=int, help='Trajectory', default=0)
 parser.add_argument('-end', '-e', type=int, help='Trajectory', default=-1)
+parser.add_argument('-len', '-l', type=int, help='(minimum) threshold for length of loop and open segment', default=10)
 args = parser.parse_args()
 
-# pdb = sys.argv[1]
-len_seg = 10  # predefine minimum segment length, |j-i| >=len_seg
-
+len_seg = args.len
 
 """
-note on numba extension:
+note on numba:
 @njit= @jit(nopython=True) this will boost the performance dramatically
 fastmath=True: in this function (example) the reduction can be vectorized as floating point association is permitted.
 argument parallel=True used with prange will be consider when working with trajectories where prange use to parallel for 
 frame, in current situation, it is slower
 since split threads and then waiting for result, joint the results...
 @njit(fastmath=True, parallel=True)
+Here, DO NOT USE PARALLEL PRAGMA SINCE WILL WILL USE ALL CORES TO CALCULATE, EACH CORE CALCULATE FOR EACH PART OF 
+TRAJECTORY.
 """
 
 
@@ -56,6 +62,11 @@ def cal_gc_ij(R_diff_3d, dR_cross_3d, _i1, _i2, _j1, _j2):
 
 
 def calculation_single_frame(raw_positions):
+    """
+
+    :param raw_positions: position of all-Calpha atoms.
+    :return: g, i1, i2, j1, j2
+    """
     # Calculate average positions and bond vectors in eq (2,3)
     ave_positions = 0.5 * (raw_positions[:-1, :] + raw_positions[1:, :])
     bond_vectors = - (raw_positions[:-1, :] - raw_positions[1:, :])
@@ -76,6 +87,7 @@ def calculation_single_frame(raw_positions):
     dR_cross = np.cross(pair_array[:, 0, :], pair_array[:, 1, :])
     dR_cross_3d = dR_cross.reshape(N, N, 3)
 
+    # distance between average position i and j, pair-wise matrix
     pair_array = np.asarray(list(itertools.product(raw_positions, raw_positions)))
     Distance_diff = pair_array[:, 0, :] - pair_array[:, 1, :]
     Distance_pair = np.linalg.norm(Distance_diff, axis=1).reshape(nAtoms, nAtoms)
@@ -109,13 +121,16 @@ if __name__ == "__main__":
     resids = ca_atoms.resids
     n_frames = u.trajectory.n_frames
     print(f"there are {n_frames} frames in trajectory")
-    
+
     if args.top == args.traj:
         positions = ca_atoms.positions
         g, i1, i2, j1, j2 = calculation_single_frame(positions)
         print(
-                    f'{g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) \
+            f'{g : .3f} #({resnames[i1]}[{resids[i1]}] {resnames[i2]}[{resids[i2]}]) \
                     ({resnames[j1]}[{resids[j1]}] {resnames[j2]}[{resids[j2]}])')
+        end_time = time.time()
+        total_run_time = end_time - begin_time
+        print(f'#REPORT: Total execution time: {total_run_time / 60.0:.3f} mins')
     else:
         with open(f'temp/res_{args.begin}_{args.end}', 'w') as f:
             for ts in u.trajectory[args.begin:args.end]:
