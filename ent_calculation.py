@@ -1,7 +1,7 @@
 """
 Notes on code:
 well, when I wrote this function, only God and I know what it does (April 2021).
-Now- Aug 2021- only God know. God dammit ...
+Now- Aug 2021- only God knows. God dammit ...
 
 The length of loop and open segment >=10 (i1-i2 and j1-j2>=10)
 I don't know why authors used this criteria but just use this.
@@ -15,12 +15,12 @@ import numpy as np
 from numba import njit
 
 # parser args
-parser = argparse.ArgumentParser(description="test arg")
+parser = argparse.ArgumentParser(description="Gauss Entanglement calculations.\n Example: python ent_calculation.py -p TOP -f TRAJ -b 0 -e -1")
 parser.add_argument('-top', '-p', type=str, help='Topology')
 parser.add_argument('-traj', '-f', type=str, help='Trajectory')
-parser.add_argument('-begin', '-b', type=int, help='Trajectory', default=0)
-parser.add_argument('-end', '-e', type=int, help='Trajectory', default=-1)
-parser.add_argument('-len', '-l', type=int, help='(minimum) threshold for length of loop and open segment', default=10)
+parser.add_argument('-begin', '-b', type=int, help='Starting frame (default: 0)', default=0)
+parser.add_argument('-end', '-e', type=int, help='End frame (default: last)', default=-1)
+parser.add_argument('-len', '-l', type=int, help='(minimum) threshold for length of loop and open segment (default: 10)', default=10)
 args = parser.parse_args()
 
 len_seg = args.len
