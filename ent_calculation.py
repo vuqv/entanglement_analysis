@@ -6,22 +6,23 @@ Now- Aug 2021- only God knows. God dammit ...
 The length of loop and open segment >=10 (i1-i2 and j1-j2>=10)
 I don't know why authors used this criteria but just use this.
 """
-import argparse
-from functools import cache
-import itertools
-import time
-
 import MDAnalysis as mda
+import argparse
+import itertools
 import numpy as np
+import time
+from functools import cache
 from numba import njit
 
 # parser args
-parser = argparse.ArgumentParser(description="Gauss Entanglement calculations.\n Example: python ent_calculation.py -p TOP -f TRAJ -b 0 -e -1")
+parser = argparse.ArgumentParser(
+    description="Gauss Entanglement calculations.\n Example: python ent_calculation.py -p TOP -f TRAJ -b 0 -e -1")
 parser.add_argument('-top', '-p', type=str, help='Topology')
 parser.add_argument('-traj', '-f', type=str, help='Trajectory')
 parser.add_argument('-begin', '-b', type=int, help='Starting frame (default: 0)', default=0)
 parser.add_argument('-end', '-e', type=int, help='End frame (default: last)', default=-1)
-parser.add_argument('-len', '-l', type=int, help='(minimum) threshold for length of loop and open segment (default: 10)', default=10)
+parser.add_argument('-len', '-l', type=int,
+                    help='(minimum) threshold for length of loop and open segment (default: 10)', default=10)
 args = parser.parse_args()
 
 len_seg = args.len
@@ -107,7 +108,7 @@ def calculation_single_frame(raw_positions):
         if Distance_pair[i1, i2] < 9.0:
             res_gn, res_gc = np.zeros(5), np.zeros(5)
             # GN
-            for (j1, j2) in [(j1, j2) for j1 in range(i1-len_seg + 1) for j2 in range(j1 + len_seg, i1)]:
+            for (j1, j2) in [(j1, j2) for j1 in range(i1 - len_seg + 1) for j2 in range(j1 + len_seg, i1)]:
                 res_gn_temp = cal_gc_ij(R_diff_3d, dR_cross_3d, i1, i2, j1, j2)
                 res_gn = res_gn_temp if np.abs(res_gn_temp[0]) > np.abs(res_gn[0]) else res_gn
             # GC
@@ -117,16 +118,8 @@ def calculation_single_frame(raw_positions):
 
             res = res_gn if np.abs(res_gn[0]) > np.abs(res_gc[0]) else res_gc
 
-
             if final_G <= np.abs(res[0]):
                 final_G, IDX_i1, IDX_i2, IDX_j1, IDX_j2 = np.abs(res[0]), res[1], res[2], res[3], res[4]
-
-
-        # for (j1, j2) in [(j1, j2) for j1 in range(N - len_seg + 1) for j2 in range(j1 + len_seg, N + 1)]:
-        #     if Distance_pair[i1, i2] < 9.0 and ((j1 < i1 and j2 < i1) or (j1 > i2 and j2 > i2)):
-        #         res = cal_gc_ij(R_diff_3d, dR_cross_3d, i1, i2, j1, j2)
-        #         if final_G <= np.abs(res[0]):
-        #             final_G, IDX_i1, IDX_i2, IDX_j1, IDX_j2 = np.abs(res[0]), res[1], res[2], res[3], res[4]
 
     if final_G == 0:
         return final_G, 0, 0, 0, 0
