@@ -111,8 +111,8 @@ def calculation_single_frame(raw_positions):
             for (j1, j2) in [(j1, j2) for j1 in range(i1 - len_seg + 1) for j2 in range(j1 + len_seg, i1)]:
                 res_gn_temp = cal_gc_ij(R_diff_3d, dR_cross_3d, i1, i2, j1, j2)
                 res_gn = res_gn_temp if np.abs(res_gn_temp[0]) > np.abs(res_gn[0]) else res_gn
-            # GC
-            for (j1, j2) in [(j1, j2) for j1 in range(i2, N - len_seg + 1) for j2 in range(j1 + len_seg, N + 1)]:
+            # GC look likes j1 start from j2+1
+            for (j1, j2) in [(j1, j2) for j1 in range(i2+1, N - len_seg + 1) for j2 in range(j1 + len_seg, N + 1)]:
                 res_gc_temp = cal_gc_ij(R_diff_3d, dR_cross_3d, i1, i2, j1, j2)
                 res_gc = res_gc_temp if np.abs(res_gc_temp[0]) > np.abs(res_gc[0]) else res_gc
 
