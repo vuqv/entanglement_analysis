@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
-import datetime
+# import datetime
 import itertools
-import sys
+# import sys
 import time
 
 from numba import njit
@@ -24,42 +24,29 @@ parser.add_argument('-top', '-p', type=str, help='Topology')
 parser.add_argument('-traj', '-f', type=str, help='Trajectory')
 parser.add_argument('-begin', '-b', type=int, help='Starting frame (default: 0)', default=0)
 parser.add_argument('-end', '-e', type=int, help='End frame (default: last)', default=-1)
-parser.add_argument('-stride', '-stride', type=int, help='End frame (default: last)', default=1)
-parser.add_argument('-nproc', '-nproc', type=int, help='number of processors to use', default=1)
+parser.add_argument('-skip', '-skip', type=int, help='analyze every nr-th frame', default=1)
+parser.add_argument('-nproc', '-nt', type=int, help='number of processors to use', default=1)
 parser.add_argument('-S', '-S', type=int, help='exclude residues before and after loop (default: 1)', default=1)
 
 args = parser.parse_args()
-frame_stride = args.stride
 
+frame_skip = args.skip
 # trajectory
 in_paths = args.traj
-
 psf = args.top
-
 outfile_basename = args.traj.split('.')[0]
-
 start_frame = args.begin
-
 end_frame = args.end
-
-global S
+# global S
 S = args.S
-
 global nproc
-
 nproc = args.nproc
 print(f'nproc: {nproc}')
 
 """START initial loading of structure files and qualtiy control"""
-# START preference setting
 
 start_time = time.time()  # time since epoch
-# print('time since epoch = ' + str(start_time))
 
-# now = datetime.datetime.now()  # time now at this moment
-# print('time now at this moment = ' + str(now))
-# np.set_printoptions(threshold=sys.maxsize, linewidth=200)  # print total numpy matrix
-# np.set_printoptions(linewidth=200)  # print total numpy matrix
 np.seterr(divide='ignore', invalid='ignore')
 
 
@@ -68,21 +55,16 @@ np.seterr(divide='ignore', invalid='ignore')
 
 # USER DEFINED FUNCTIONS
 def gen_nc_gdict(coor, coor_cmap):
-    # dom_nc_gdict = {}
-    # dom_gn_dict = {}
-    # dom_contact_ent = {}
     global dot_matrix, l
 
     nc_indexs = np.stack(np.nonzero(coor_cmap)).transpose()
 
     l = len(coor)
+    print("shape of coor:", coor.shape)
 
-    # make R and dR waves of length N-1
-    range_l = np.arange(0, l - 1)
-    range_next_l = np.arange(1, l)
+    R = 0.5 * (coor[:-1:] + coor[1:,:])
+    dR = coor[1:,:] - coor[:-1,:]
 
-    R = 0.5 * (coor[range_l] + coor[range_next_l])
-    dR = coor[range_next_l] - coor[range_l]
 
     # make dRcross matrix
     pair_array = np.asarray(list(itertools.product(dR, dR)))
@@ -221,7 +203,7 @@ if end_frame == -1:
 print(
     '\n########################################START analysis of trajectory########################################\n')
 
-for ts in u.trajectory[start_frame:end_frame:frame_stride]:
+for ts in u.trajectory[start_frame:end_frame:frame_skip]:
     framenum = ts.frame
     frametime = ts.time
 
