@@ -113,7 +113,7 @@ def gen_nc_gdict(coor, coor_cmap):
     max_contact_ent = max(contact_ent[:, 4])
     maxarg = np.argmax(contact_ent[:, 4])
 
-    print(f'max_contact_ent: {max_contact_ent} for PDB: {in_paths}')
+    print(f'max_contact_ent: {max_contact_ent:.3f} for PDB: {in_paths}')
 
     return (contact_ent[maxarg], contact_ent)
 
@@ -205,7 +205,7 @@ def cmap(cor, cut_off=9.0):
 """
 Main program
 """
-# START loading of analysis universe
+
 print('\nSTART loading of analysis universe...\n')
 # get alpha carbons atoms and then positions of them
 print(f'Loading: {psf} & {in_paths}')
@@ -214,7 +214,7 @@ u_calphas = u.select_atoms('name CA')
 
 ### START analysis of universe ###
 outdata = []
-frame_times = []
+# frame_times = []
 n_frames = u.trajectory.n_frames
 if end_frame == -1:
     end_frame = n_frames + 1
@@ -225,7 +225,7 @@ for ts in u.trajectory[start_frame:end_frame:frame_stride]:
     framenum = ts.frame
     frametime = ts.time
 
-    frame_start_time = time.time()  # time since epoch
+    # frame_start_time = time.time()  # time since epoch
 
     frame_coor = u_calphas.positions
 
@@ -239,10 +239,13 @@ for ts in u.trajectory[start_frame:end_frame:frame_stride]:
 
     outdata.append(frame_dom_pair_contact_ent_dict[0])
 
-    frame_times.append(time.time() - frame_start_time)
+    # frame_times.append(time.time() - frame_start_time)
 
-# post processes data
-# add + 1 to resid
+"""
+Here we add 1 to loop and thread indeces.
+If they are not 0- means the loop is existed.
+add + 1 to resid i1,i2,j1, j2: which is in range (5:10)
+"""
 outdata = np.stack(outdata)
 for e, o in enumerate(outdata):
     if o[5:10].sum() != 0:
@@ -260,5 +263,5 @@ print(f'Saved: {outfile_name} and {outfile_name}.txt')
 
 ######################################################################################################################
 comp_time = time.time() - start_time
-print(f'computation time: {comp_time}')
+print(f'computation time: {comp_time} seconds')
 print(f'NORMAL TERMINATION')
