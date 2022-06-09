@@ -3,23 +3,23 @@
 import argparse
 # import datetime
 import itertools
+import numpy as np
 # import sys
 import time
-
-from numba import njit
-from functools import cache
-import numpy as np
+import warnings
 from MDAnalysis import *
+from functools import cache
 from joblib import Parallel, delayed
+from numba import njit
 from scipy.spatial.distance import pdist, squareform
 
-import warnings
 warnings.filterwarnings("ignore")
 """
 START argument parse
 """
 parser = argparse.ArgumentParser(
-    description="Gauss Entanglement calculations.\n Example: python ent_calculation.py -p TOP -f TRAJ -b 0 -e -1")
+    description="Gauss Entanglement calculations.\n Example: python gauss_linking.py -p TOP -f TRAJ -b 0 -e -1 -nt 1 "
+                "-skip 1") 
 parser.add_argument('-top', '-p', type=str, help='Topology')
 parser.add_argument('-traj', '-f', type=str, help='Trajectory')
 parser.add_argument('-begin', '-b', type=int, help='Starting frame (default: 0)', default=0)
@@ -39,11 +39,9 @@ start_frame = args.begin
 end_frame = args.end
 # global S
 S = args.S
-global nproc
-nproc = args.nproc
-print(f'nproc: {nproc}')
+print(f'Using {args.nproc} processor(s)')
 
-"""START initial loading of structure files and qualtiy control"""
+"""START initial loading of structure files and quality control"""
 
 start_time = time.time()  # time since epoch
 
@@ -57,14 +55,13 @@ np.seterr(divide='ignore', invalid='ignore')
 def gen_nc_gdict(coor, coor_cmap):
     global dot_matrix, l
 
-    nc_indexs = np.stack(np.nonzero(coor_cmap)).transpose()
+    nc_index = np.stack(np.nonzero(coor_cmap)).transpose()
 
     l = len(coor)
     print("shape of coor:", coor.shape)
 
-    R = 0.5 * (coor[:-1:] + coor[1:,:])
-    dR = coor[1:,:] - coor[:-1,:]
-
+    R = 0.5 * (coor[:-1:] + coor[1:, :])
+    dR = coor[1:, :] - coor[:-1, :]
 
     # make dRcross matrix
     pair_array = np.asarray(list(itertools.product(dR, dR)))
@@ -86,7 +83,7 @@ def gen_nc_gdict(coor, coor_cmap):
     dot_matrix = np.asarray(dot_matrix)
     dot_matrix = dot_matrix.reshape((l - 1, l - 1))
 
-    contact_ent = np.asarray(Parallel(n_jobs=nproc)(delayed(g_calc)(i, j) for i, j in nc_indexs if j >= i + 10))
+    contact_ent = np.asarray(Parallel(n_jobs=args.nproc)(delayed(g_calc)(i, j) for i, j in nc_index if j >= i + 10))
 
     # handel the situation where no native contacts have been formed yet
     if contact_ent.size == 0:
