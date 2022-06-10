@@ -19,3 +19,7 @@ For single frame (pdb file), use single_frame.py for short and more detailed
 For trajectory, run caller.py, which will automatically divided trajectory in multiple parts
 and call ent_calculations for each part (multiple frames)
 ./run_caller.sh is perfect for short, but you need to modify the input params.
+
+* For Julia version:
+At the moment it can only work with PDB of single model
+julia gauss_linking.jl PDBFILE
