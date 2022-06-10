@@ -61,18 +61,6 @@ contact_list = []
     end
 end
 
-# Define function to calculate GLN
-function cal_gln(i1::Int64,i2::Int64,j1::Int64,j2::Int64)
-    gln_ij = 0.0
-    @inbounds @simd for i in i1:i2-1
-        @inbounds @simd for j in j1:j2-1
-            @fastmath gln_ij += dot_cross_matrix[i,j]
-        end
-    end
-    # using * instead of /
-    return 0.0795775*gln_ij
-    # return gln_ij/(4.0*pi)
-end
 
 results = Float64[]
 @inbounds @simd for cl in contact_list
@@ -80,15 +68,14 @@ results = Float64[]
     for j1 in 1:i1-10
         # res = 0.0
         @inbounds @simd for j2 in j1+10:i1-1
-            @fastmath res = cal_gln(i1, i2, j1, j2)
-#             @printf("%d %d %d %d %f\n",i1,i2,j1,j2,res)
+            @fastmath res = sum(dot_cross_matrix[i1:i2-1,j1:j2-1])/(4*pi)
             push!(results, abs(res))
         end
     end
     
     @inbounds @simd for j1 in i2+1:len_coor-10
         @inbounds @simd for j2 in j1+10:len_coor
-            @fastmath res = cal_gln(i1,i2,j1,j2)
+            @fastmath res = sum(dot_cross_matrix[i1:i2-1,j1:j2-1])/(4*pi)
 #             @printf("%d %d %d %d %f\n",i1,i2,j1,j2,res)
             push!(results, abs(res))
         end
