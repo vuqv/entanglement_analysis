@@ -56,8 +56,8 @@ for frame in 1:nframes
     # get contact list in frame
     pair_dis = pairwise(euclidean, coor, dims=1)
     contact_list = []
-    @simd for i1 in 1:len_coor-10
-        for i2 in i1+10:len_coor
+    @simd for i1 in 1:n_atoms-10
+        for i2 in i1+10:n_atoms
             if pair_dis[i1,i2] <= 9.0
                 push!(contact_list, (i1,i2))
             end
