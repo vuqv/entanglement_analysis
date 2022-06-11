@@ -93,6 +93,7 @@ for frame in 1:increment_num_frames:nframes
         different threads write to different var in different cache line then thread does not need to wait for eachother.
     """
     space = 16 
+    # results = [Tuple{Float64, Int64, Int64, Int64, Int64}[] for _ in 1:nthreads()*space]
     results = zeros(Float64, (nthreads()*space, 5))
     @threads for cl in contact_list
         i1,i2 = cl
