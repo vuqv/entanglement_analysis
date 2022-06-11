@@ -56,8 +56,12 @@ else
 end
 
 increment_num_frames = parsed_args["skip"]
-
+# prepare file for output
+filename = split(parsed_args["traj"],('.','/'))[end-1] *"_results.txt"
+io = open(filename, "w")
+@printf(io,"#   frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)\n")
 println("frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)")
+
 start_time = time_ns()
 for frame in 1:increment_num_frames:nframes
     # single frame
@@ -112,11 +116,11 @@ for frame in 1:increment_num_frames:nframes
         end
     end
     idx_max_gc = argmax(results[:, 1])
-    max_gc, idx_i1, idx_i2, idx_j1, idx_j2 = results[idx_max_gc, 1], results[idx_max_gc, 2], results[idx_max_gc, 3], results[idx_max_gc, 4], results[idx_max_gc, 5]
+    max_gc, idx_i1, idx_i2, idx_j1, idx_j2 = results[idx_max_gc, :]
     @printf("%d \t %d \t %d \t %d \t %d \t %.3f\n", frame, resids[Int64(idx_i1)], resids[Int64(idx_i2)], resids[Int64(idx_j1)], resids[Int64(idx_j2)], max_gc)
-    # @printf("%d \t %d \t %d \t %d \t %d \t %.3f\n", frame, idx_i1, idx_i2, idx_j1, idx_j2, max_gc)
+    @printf(io, "%8d \t %3d \t %3d \t %3d \t %3d \t %.3f\n", frame, resids[Int64(idx_i1)], resids[Int64(idx_i2)], resids[Int64(idx_j1)], resids[Int64(idx_j2)], max_gc)
 end
-
+close(io)
 end_time = time_ns()
 dt = (end_time - start_time) / 10^9
 println("Execution time: ", dt, "(s)")
