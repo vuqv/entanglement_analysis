@@ -1,6 +1,7 @@
 using PackageCompiler
 
-create_sysimage([:MDToolbox, :Distances, :ArgParse], sysimage_path="gauss_image.so", precompile_execution_file="precompile_plots.jl")
+# create_sysimage([:MDToolbox, :Distances, :ArgParse], sysimage_path="gauss_image.so", precompile_execution_file="precompile_plots.jl")
+create_sysimage([:MDToolbox, :Distances, :ArgParse], sysimage_path="gauss_image.so")
 
 # run code with image:
 # julia -J gauss_image.so --trace-compile=stderr gauss_linking.jl -f XXX -p YYY
