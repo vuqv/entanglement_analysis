@@ -1,2 +1,0 @@
-# framenum, frametime, gn_parital_link, gc_parital_link, G_c, i1, i2, j1, j2, ent_res, depth
-0 0.0000 0.9185 0.0256 0.9794 20 112 1 11 11 0.5263
