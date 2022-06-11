@@ -45,6 +45,7 @@ end_time = time_ns()
 println("Initialize time: ", (end_time-start_time)/10^9, "(s)")
 
 n_atoms = t["atomname CA"].natom
+resids = t["atomname CA"].resid
 # checking number of frames and related stuffs
 if parsed_args["end"] == 0
     nframes = t.nframe
@@ -111,7 +112,8 @@ for frame in 1:increment_num_frames:nframes
     end
     idx_max_gc = argmax(results[:,1])
     max_gc, idx_i1,idx_i2,idx_j1,idx_j2  = results[idx_max_gc, 1], results[idx_max_gc, 2], results[idx_max_gc, 3], results[idx_max_gc, 4], results[idx_max_gc, 5]
-    @printf("%d \t %d \t %d \t %d \t %d \t %.3f\n", frame, idx_i1, idx_i2, idx_j1, idx_j2, max_gc)
+    @printf("%d \t %d \t %d \t %d \t %d \t %.3f\n", frame, resids[Int64(idx_i1)], resids[Int64(idx_i2)], resids[Int64(idx_j1)], resids[Int64(idx_j2)], max_gc)
+    # @printf("%d \t %d \t %d \t %d \t %d \t %.3f\n", frame, idx_i1, idx_i2, idx_j1, idx_j2, max_gc)
 end
 
 end_time = time_ns()
