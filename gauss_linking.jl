@@ -25,6 +25,10 @@ function parse_commandline()
         help = "skip every frame"
         arg_type = Int64
         default = 1
+        "--out_dir", "-o"
+        help = "skip every frame"
+        arg_type = String
+        default = "./"
     end
     return parse_args(s)
 end
@@ -62,9 +66,27 @@ end
 
 increment_num_frames = parsed_args["skip"]
 # prepare file for output
-filename = split(parsed_args["traj"], ('.', '/'))[end-1] * "_results.txt"
+if parsed_args["out_dir"] == "./"
+    out_dir = parsed_args["out_dir"]
+    println("Output directory is not specified. Use current folder as default.")
+else
+    # if output directory is specified, check if it exists
+    if isdir(parsed_args["out_dir"])
+        # do something if dir exists
+        println("Output directory is specified and existed.")
+        out_dir = parsed_args["out_dir"]*"/"
+    else
+        println("Output directory is specified and does not existed. Making folder for results")
+        mkdir(parsed_args["out_dir"])
+        out_dir = parsed_args["out_dir"]*"/"
+    end
+end
+
+filename = out_dir * split(parsed_args["traj"], ('.', '/'))[end-1] * "_results.txt"
 io = open(filename, "w")
 @printf(io, "#   frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)\n")
+# End of output preparation
+
 println("frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)")
 
 start_time = time_ns()
@@ -77,14 +99,11 @@ for frame = 1:increment_num_frames:nframes
 
     len_coor = size(Rcoor)[1]
     R_diff = reshape(
-        [@. Rcoor[i, :] - Rcoor[j, :] for j = 1:len_coor for i = 1:len_coor],
+        [@. Rcoor[i, :] - Rcoor[j, :] for j = 1:len_coor, i = 1:len_coor],
         (len_coor, len_coor),
     )
     dR_cross = reshape(
-        [
-            cross(dRcoor[i, :], dRcoor[j, :]) for j = 1:len_coor for
-            i = 1:len_coor
-        ],
+        [cross(dRcoor[i, :], dRcoor[j, :]) for j = 1:len_coor, i = 1:len_coor],
         (len_coor, len_coor),
     )
     # precompute every element of term Gauss double summation
