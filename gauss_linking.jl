@@ -175,25 +175,49 @@ for frame = begin_frame:increment_num_frames:end_frame
     end
     idx_max_gc = argmax(results[:, 1])
     max_gc, idx_i1, idx_i2, idx_j1, idx_j2 = results[idx_max_gc, :]
-    @printf(
-        "%d \t %d \t %d \t %d \t %d \t %.3f\n",
-        frame,
-        resids[Int64(idx_i1)],
-        resids[Int64(idx_i2)],
-        resids[Int64(idx_j1)],
-        resids[Int64(idx_j2)],
-        max_gc
-    )
-    @printf(
-        io,
-        "%8d \t %3d \t %3d \t %3d \t %3d \t %.3f\n",
-        frame,
-        resids[Int64(idx_i1)],
-        resids[Int64(idx_i2)],
-        resids[Int64(idx_j1)],
-        resids[Int64(idx_j2)],
-        max_gc
-    )
+    if Int64(idx_i1) == 0
+        # no loop in this case, then all variables here are 0. just compare idx_i1 is enough
+        @printf(
+            "%d \t %d \t %d \t %d \t %d \t %.3f\n",
+            frame,
+            Int64(idx_i1),
+            Int64(idx_i2),
+            Int64(idx_j1),
+            Int64(idx_j2),
+            max_gc
+        )
+        @printf(
+            io,
+            "%8d \t %3d \t %3d \t %3d \t %3d \t %.3f\n",
+            frame,
+            Int64(idx_i1),
+            Int64(idx_i2),
+            Int64(idx_j1),
+            Int64(idx_j2),
+            max_gc
+        )
+    else
+
+        @printf(
+            "%d \t %d \t %d \t %d \t %d \t %.3f\n",
+            frame,
+            resids[Int64(idx_i1)],
+            resids[Int64(idx_i2)],
+            resids[Int64(idx_j1)],
+            resids[Int64(idx_j2)],
+            max_gc
+        )
+        @printf(
+            io,
+            "%8d \t %3d \t %3d \t %3d \t %3d \t %.3f\n",
+            frame,
+            resids[Int64(idx_i1)],
+            resids[Int64(idx_i2)],
+            resids[Int64(idx_j1)],
+            resids[Int64(idx_j2)],
+            max_gc
+        )
+    end
 end
 close(io)
 end_time = time_ns()
