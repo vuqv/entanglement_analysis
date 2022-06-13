@@ -53,7 +53,8 @@ end
 end_time = time_ns()
 println("Initialize time: ", (end_time - start_time) / 10^9, "(s)")
 
-n_atoms = t["atomname CA"].natom
+const n_atoms = t["atomname CA"].natom
+const len_coor = n_atoms - 1 #length of average coordinate
 resids = t["atomname CA"].resid
 # checking number of frames and related stuffs
 if parsed_args["end"] == 0
@@ -74,15 +75,18 @@ else
     if isdir(parsed_args["out_dir"])
         # do something if dir exists
         println("Output directory is specified and existed.")
-        out_dir = parsed_args["out_dir"]*"/"
+        out_dir = parsed_args["out_dir"] * "/"
     else
-        println("Output directory is specified and does not existed. Making folder for results")
+        println(
+            "Output directory is specified and does not existed. Making folder for results",
+        )
         mkdir(parsed_args["out_dir"])
-        out_dir = parsed_args["out_dir"]*"/"
+        out_dir = parsed_args["out_dir"] * "/"
     end
 end
 
-filename = out_dir * split(parsed_args["traj"], ('.', '/'))[end-1] * "_results.txt"
+filename =
+    out_dir * split(parsed_args["traj"], ('.', '/'))[end-1] * "_results.txt"
 io = open(filename, "w")
 @printf(io, "#   frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)\n")
 # End of output preparation
@@ -93,25 +97,41 @@ start_time = time_ns()
 for frame = 1:increment_num_frames:nframes
     # single frame
     coor = reshape(t["atomname CA"].xyz[frame, :], (3, n_atoms))'
-    # @. indicates operator here is not working on vector.
+    """
+        @. indicates operator here is not working on vector.
+        slicing array make a copy of sub-array => use @view macro will reduce
+            memory allocation and speedup computational time
+    """
     Rcoor = @. 0.5 * (@view(coor[1:n_atoms-1, :]) + @view(coor[2:n_atoms, :]))
     dRcoor = @. @view(coor[2:n_atoms, :]) - @view(coor[1:n_atoms-1, :])
 
-    len_coor = size(Rcoor)[1]
+    # len_coor = size(Rcoor)[1]
     R_diff = reshape(
-        [@. @view(Rcoor[i, :]) - @view(Rcoor[j, :]) for j = 1:len_coor, i = 1:len_coor],
+        [
+            @. @view(Rcoor[i, :]) - @view(Rcoor[j, :]) for j = 1:len_coor,
+            i = 1:len_coor
+        ],
         (len_coor, len_coor),
     )
     dR_cross = reshape(
-        [cross(@view(dRcoor[i, :]), @view(dRcoor[j, :])) for j = 1:len_coor, i = 1:len_coor],
+        [
+            cross(@view(dRcoor[i, :]), @view(dRcoor[j, :])) for
+            j = 1:len_coor, i = 1:len_coor
+        ],
         (len_coor, len_coor),
     )
-    # precompute every element of term Gauss double summation
+    """ precompute every element of term Gauss double summation.
+        Julia is col-oriented programming language. Write programe for col first
+        will boot performance.
+    """
     dot_cross_matrix = zeros(Float64, (len_coor, len_coor))
-
-    @threads for i = 1:len_coor
-        for j = 1:len_coor
-            # @inbounds: developers promise all variable are in bounds- program and compiler no need to spend time to check
+    @threads for j = 1:len_coor
+        for i = 1:len_coor
+            """@inbounds: developers promise all variable are in bounds
+                - program and compiler no need to spend time to check.
+                - use with cautions.
+            @fastmath: tell compiler that only need accuracy in number, not IEEE standard.
+            """
             @fastmath @inbounds dot_cross_matrix[i, j] =
                 dot((R_diff[i, j] / (norm(R_diff[i, j])^3)), dR_cross[i, j])
         end
@@ -126,9 +146,11 @@ for frame = 1:increment_num_frames:nframes
     end
 
     """
-    this increase distance between two variable of array in heap memory, by default, this is 1.
+    This trick increases distance between two variable of array in heap memory.
+    By default, this is 1.
     in case of multithreading:
-        different threads write to different var in different cache line then thread does not need to wait for eachother.
+        different thread writes to different var in different cache line -
+        -thread does not need to wait for eachother.
     """
     space = 16
     # results = [Tuple{Float64, Int64, Int64, Int64, Int64}[] for _ in 1:nthreads()*space]
@@ -145,7 +167,7 @@ for frame = 1:increment_num_frames:nframes
 
         for j1 = i2+1:len_coor-10, j2 = j1+10:len_coor
             @fastmath @inbounds res =
-                abs(sum(dot_cross_matrix[i1:i2-1, j1:j2-1]) / (4 * pi))
+                abs(sum(@view(dot_cross_matrix[i1:i2-1, j1:j2-1])) / (4 * pi))
             if res >= results[threadid()*space, 1]
                 results[threadid()*space, :] = [res, i1, i2, j1, j2]
             end
