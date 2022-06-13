@@ -96,26 +96,26 @@ println("frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)")
 start_time = time_ns()
 for frame = begin_frame:increment_num_frames:end_frame
     # single frame
-    coor = reshape(@view(t["atomname CA"].xyz[frame, :]), (3, n_atoms))'
+    coor = reshape(@view(t["atomname CA"].xyz[frame, :]), (3, n_atoms))
     """
         @. indicates operator here is not working on vector.
         slicing array make a copy of sub-array => use @view macro will reduce
             memory allocation and speedup computational time
     """
-    Rcoor = @. 0.5 * (@view(coor[1:n_atoms-1, :]) + @view(coor[2:n_atoms, :]))
-    dRcoor = @. @view(coor[2:n_atoms, :]) - @view(coor[1:n_atoms-1, :])
+    Rcoor = @. 0.5 * (@view(coor[:, 1:n_atoms-1]) + @view(coor[:, 2:n_atoms]))
+    dRcoor = @. @view(coor[:, 2:n_atoms]) - @view(coor[:, 1:n_atoms-1])
 
     # len_coor = size(Rcoor)[1]
     R_diff = reshape(
         [
-            @. @view(Rcoor[i, :]) - @view(Rcoor[j, :]) for j = 1:len_coor,
+            @. @view(Rcoor[:, i]) - @view(Rcoor[:, j]) for j = 1:len_coor,
             i = 1:len_coor
         ],
         (len_coor, len_coor),
     )
     dR_cross = reshape(
         [
-            cross(@view(dRcoor[i, :]), @view(dRcoor[j, :])) for
+            cross(@view(dRcoor[:, i]), @view(dRcoor[:, j])) for
             j = 1:len_coor, i = 1:len_coor
         ],
         (len_coor, len_coor),
@@ -138,12 +138,19 @@ for frame = begin_frame:increment_num_frames:end_frame
     end
     # get contact list in frame
     contact_list = []
-    pair_dis = pairwise(euclidean, coor, dims = 1)
+    pair_dis = zeros(Float64, n_atoms, n_atoms)
+    pairwise!(pair_dis, euclidean, coor, dims = 2)
     for i1 = 1:n_atoms-10, i2 = i1+10:n_atoms
         if pair_dis[i1, i2] <= 9.0
             push!(contact_list, (i1, i2))
         end
     end
+    # pair_dis = pairwise(euclidean, coor, dims = 2)
+    # for i1 = 1:n_atoms-10, i2 = i1+10:n_atoms
+    #     if pair_dis[i1, i2] <= 9.0
+    #         push!(contact_list, (i1, i2))
+    #     end
+    # end
 
     """
     This trick increases distance between two variable of array in heap memory.
