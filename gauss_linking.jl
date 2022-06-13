@@ -57,12 +57,12 @@ const n_atoms = t["atomname CA"].natom
 const len_coor = n_atoms - 1 #length of average coordinate
 resids = t["atomname CA"].resid
 # checking number of frames and related stuffs
-if parsed_args["end"] == 0
-    nframes = t.nframe
-elseif parsed_args["end"] > t.nframe
-    nframes = t.nframe
+begin_frame = parsed_args["begin"]
+
+if parsed_args["end"] == 0 || parsed_args["end"] > t.nframe
+    end_frame = t.nframe
 else
-    nframes = parsed_args["end"]
+    end_frame = parsed_args["end"]
 end
 
 increment_num_frames = parsed_args["skip"]
@@ -94,7 +94,7 @@ io = open(filename, "w")
 println("frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)")
 
 start_time = time_ns()
-for frame = 1:increment_num_frames:nframes
+for frame = begin_frame:increment_num_frames:end_frame
     # single frame
     coor = reshape(t["atomname CA"].xyz[frame, :], (3, n_atoms))'
     """
