@@ -94,16 +94,16 @@ for frame = 1:increment_num_frames:nframes
     # single frame
     coor = reshape(t["atomname CA"].xyz[frame, :], (3, n_atoms))'
     # @. indicates operator here is not working on vector.
-    Rcoor = @. 0.5 * (coor[1:n_atoms-1, :] + coor[2:n_atoms, :])
-    dRcoor = @. coor[2:n_atoms, :] - coor[1:n_atoms-1, :]
+    Rcoor = @. 0.5 * (@view(coor[1:n_atoms-1, :]) + @view(coor[2:n_atoms, :]))
+    dRcoor = @. @view(coor[2:n_atoms, :]) - @view(coor[1:n_atoms-1, :])
 
     len_coor = size(Rcoor)[1]
     R_diff = reshape(
-        [@. Rcoor[i, :] - Rcoor[j, :] for j = 1:len_coor, i = 1:len_coor],
+        [@. @view(Rcoor[i, :]) - @view(Rcoor[j, :]) for j = 1:len_coor, i = 1:len_coor],
         (len_coor, len_coor),
     )
     dR_cross = reshape(
-        [cross(dRcoor[i, :], dRcoor[j, :]) for j = 1:len_coor, i = 1:len_coor],
+        [cross(@view(dRcoor[i, :]), @view(dRcoor[j, :])) for j = 1:len_coor, i = 1:len_coor],
         (len_coor, len_coor),
     )
     # precompute every element of term Gauss double summation
@@ -137,7 +137,7 @@ for frame = 1:increment_num_frames:nframes
         i1, i2 = cl
         for j1 = 1:i1-10, j2 = j1+10:i1-1
             @fastmath @inbounds res =
-                abs(sum(dot_cross_matrix[i1:i2-1, j1:j2-1]) / (4 * pi))
+                abs(sum(@view(dot_cross_matrix[i1:i2-1, j1:j2-1])) / (4 * pi))
             if res >= results[threadid()*space, 1]
                 results[threadid()*space, :] = [res, i1, i2, j1, j2]
             end
