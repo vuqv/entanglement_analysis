@@ -96,7 +96,7 @@ println("frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)")
 start_time = time_ns()
 for frame = begin_frame:increment_num_frames:end_frame
     # single frame
-    coor = reshape(t["atomname CA"].xyz[frame, :], (3, n_atoms))'
+    coor = reshape(@view(t["atomname CA"].xyz[frame, :]), (3, n_atoms))'
     """
         @. indicates operator here is not working on vector.
         slicing array make a copy of sub-array => use @view macro will reduce
@@ -177,24 +177,16 @@ for frame = begin_frame:increment_num_frames:end_frame
     max_gc, idx_i1, idx_i2, idx_j1, idx_j2 = results[idx_max_gc, :]
     if Int64(idx_i1) == 0
         # no loop in this case, then all variables here are 0. just compare idx_i1 is enough
-        @printf(
-            "%d \t %d \t %d \t %d \t %d \t %.3f\n",
-            frame,
-            Int64(idx_i1),
-            Int64(idx_i2),
-            Int64(idx_j1),
-            Int64(idx_j2),
-            max_gc
-        )
+        @printf("%d \t %d \t %d \t %d \t %d \t %.3f\n", frame, 0, 0, 0, 0, 0)
         @printf(
             io,
             "%8d \t %3d \t %3d \t %3d \t %3d \t %.3f\n",
             frame,
-            Int64(idx_i1),
-            Int64(idx_i2),
-            Int64(idx_j1),
-            Int64(idx_j2),
-            max_gc
+            0,
+            0,
+            0,
+            0,
+            0
         )
     else
 
