@@ -1,4 +1,5 @@
-* To use code: 
+# Python version (slower than Julia version)
+* To use code:
     ```python gauss_linking.py -f TRAJ -p TOP -b BEGIN -e END -skip SKIP_FRAME -nproc NUMTHREAD```
 
 
@@ -11,7 +12,7 @@ For trajectory, run caller.py, which will automatically divided trajectory in mu
 and call ent_calculations for each part (multiple frames)
 ./run_caller.sh is perfect for short, but you need to modify the input params.
 
-#  Julia version:
+#  Julia version (prefer to use):
 * requirement packages: MDToolbox, Distances
 * To reduce precompute time, run pre_compile.jl to generate image and load into environment (this take so long, ~7 mins) but worth to do so. This is run only one.
 Full command:  
@@ -19,4 +20,3 @@ Full command:
 
 simple command:
     ```julia gauss_linking.jl -f PDBFILE```
-
