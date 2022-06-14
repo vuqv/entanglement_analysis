@@ -86,7 +86,7 @@ else
 end
 
 filename =
-    out_dir * split(parsed_args["traj"], ('.', '/'))[end - 1] * "_results.txt"
+    out_dir * split(parsed_args["traj"], ('.', '/'))[end-1] * "_results.txt"
 io = open(filename, "w")
 @printf(io, "#   frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)\n")
 # End of output preparation
