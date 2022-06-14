@@ -137,20 +137,15 @@ for frame = begin_frame:increment_num_frames:end_frame
         end
     end
     # get contact list in frame
+    # We don't know exactly how many contacts in current frame.
     contact_list = []
-    pair_dis = zeros(Float64, n_atoms, n_atoms)
-    pairwise!(pair_dis, euclidean, coor, dims = 2)
+    # pair_dis = zeros(Float64, n_atoms, n_atoms)
+    pair_dis = pairwise(euclidean, coor, dims = 2)
     for i1 = 1:n_atoms-10, i2 = i1+10:n_atoms
         if pair_dis[i1, i2] <= 9.0
             push!(contact_list, (i1, i2))
         end
     end
-    # pair_dis = pairwise(euclidean, coor, dims = 2)
-    # for i1 = 1:n_atoms-10, i2 = i1+10:n_atoms
-    #     if pair_dis[i1, i2] <= 9.0
-    #         push!(contact_list, (i1, i2))
-    #     end
-    # end
 
     """
     This trick increases distance between two variable of array in heap memory.
