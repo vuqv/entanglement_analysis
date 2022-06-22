@@ -53,7 +53,7 @@ end
 end_time = time_ns()
 println("Initialize time: ", (end_time - start_time) / 10^9, "(s)")
 
-const n_atoms = t["atomname CA"].natom
+const n_atoms = t["protein and atomname CA"].natom
 const len_coor = n_atoms - 1 #length of average coordinate
 resids = t["atomname CA"].resid
 # checking number of frames and related stuffs
@@ -96,7 +96,7 @@ println("frame \t i1 \t i2 \t j1 \t j2 \t Max(Gc)")
 start_time = time_ns()
 for frame = begin_frame:increment_num_frames:end_frame
     # single frame
-    coor = reshape(@view(t["atomname CA"].xyz[frame, :]), (3, n_atoms))
+    coor = reshape(@view(t["protein and atomname CA"].xyz[frame, :]), (3, n_atoms))
     """
         @. indicates operator here is not working on vector.
         slicing array make a copy of sub-array => use @view macro will reduce
