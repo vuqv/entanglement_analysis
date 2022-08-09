@@ -25,6 +25,6 @@ simple command:
 MDToolbox is not able to load structure contains HEATATM like ions. Find different library
 
 ## Do you want to cite this work?
-Vu, Quyen. (2022). entanglement_analysis. Zenodo. https://doi.org/10.5281/zenodo.6976792
+Vu, Quyen. (2022). entanglement analysis. Zenodo. https://doi.org/10.5281/zenodo.6976792
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6976792.svg)](https://doi.org/10.5281/zenodo.6976792)
