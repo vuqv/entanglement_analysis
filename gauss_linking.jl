@@ -41,7 +41,7 @@ if parsed_args["top"] != ""
     println(
         "Working on trajectory: ",
         parsed_args["traj"],
-        "and topology: ",
+        " and topology: ",
         parsed_args["top"],
     )
 else
@@ -56,6 +56,10 @@ println("Initialize time: ", (end_time - start_time) / 10^9, "(s)")
 const n_atoms = t["protein and atomname CA"].natom
 const len_coor = n_atoms - 1 #length of average coordinate
 resids = t["atomname CA"].resid
+
+println("Information about input file:")
+println("Number of Residues:", length(resids))
+println("Number of frames: ", t.nframe)
 # checking number of frames and related stuffs
 begin_frame = parsed_args["begin"]
 
