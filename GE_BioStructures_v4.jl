@@ -174,6 +174,10 @@ function parse_commandline()
         "--PDB", "-f"
             help = "PDB Input"
             arg_type = String
+        "--Output", "-o"
+            help = "Output directory"
+            arg_type = String
+            default = "./"
     end
 
     return parse_args(s)
@@ -181,19 +185,37 @@ end
 
 function main()
     args = parse_commandline()
-    pdb_file = args["PDB"]
+    # pdb_file = args["PDB"]
+    pdb_file = get(args, "PDB", "")
+    output_dir = get(args, "Output", "./")
+
+    if isempty(pdb_file)
+        println("Error: PDB file argument is required.")
+        return
+    end
+    
     base_name = split(basename(pdb_file), ".")[1]
 
+    # Create output directory if it doesn't exist
+    if !isdir(output_dir)
+        mkpath(output_dir)
+        println("Created output directory: $output_dir")
+    end
+
     # prepare output file
-    output_filename = string("MAX_GC_", base_name, ".dat")
+    output_filename = joinpath(output_dir, "MAX_GC_$base_name.dat")
     io = open(output_filename, "w")
 
-    coor = read_coordinates(pdb_file)
-    i1, i2, j1, j2, maxG = GLN(coor)
-    @printf(" %s, [(%d, %d) | (%d, %d)], %.3f\n", base_name, i1, i2, j1, j2, maxG)
-    @printf(io, " %s, [(%d, %d) | (%d, %d)], %.3f\n", base_name, i1, i2, j1, j2, maxG)
-
-    close(io)
+    try
+        coor = read_coordinates(pdb_file)
+        i1, i2, j1, j2, maxG = GLN(coor)
+        @printf("%s, [(%d, %d) | (%d, %d)], %.3f\n", base_name, i1, i2, j1, j2, maxG)
+        @printf(io, "%s, [(%d, %d) | (%d, %d)], %.3f\n", base_name, i1, i2, j1, j2, maxG)
+    catch err
+        println("Error processing $pdb_file: $err")
+    finally
+        close(io)
+    end
 
 end
 
