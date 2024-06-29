@@ -21,10 +21,14 @@ Full command:
 simple command:
     ```julia gauss_linking.jl -f PDBFILE```
 
+## Analyze single PDB file:
+
+For single PDB file, another option is use `GE_BioStructures_v4.jl` which employed BioStructures.jl package version 4, which will work with Julia 1.10.
+
+Command is similar to above: 
+    `julia GE_BioStructure_v4.jl -f PDB_FILE`
+
+The benifit of this file is using newer version of Julia and dependence packages so it improves loading time.
+
 ### Note:
 MDToolbox is not able to load structure contains HEATATM like ions. Find different library
-
-## Do you want to cite this work?
-Vu, Quyen. (2022). entanglement analysis. Zenodo. https://doi.org/10.5281/zenodo.6976792
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6976792.svg)](https://doi.org/10.5281/zenodo.6976792)
