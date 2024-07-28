@@ -53,8 +53,25 @@ function read_coordinates_multiple_files(pdb_files::Vector{String}) :: Vector{Ma
     return all_coords
 end
 
-function get_contacts(pdb_file::String)
+"""
+    get_contacts(pdb_file::String, bfactor_threshold::Union{Int64, Float64}=0.0)
+
+This function identifies contacts between residues in a protein structure.
+
+# Arguments
+- `pdb_file::String`: Path to the PDB file.
+- `bfactor_threshold::Union{Int64, Float64}=0.0`: Threshold for the B-factor (temperature factor) to consider residues in contact.
+
+# Returns
+- `contacts::Array{Tuple{Int32, Int32}}`: Sorted array of unique residue pairs that are in contact.
+
+# Details
+For the AlphaFold structure, we require that the confidence score of the contact residues is greater than or equal to 70 (confident or high-confidence).
+"""
+function get_contacts(pdb_file::String, bfactor_threshold::Union{Int64, Float64}=0.0)
+    # Read the structure from the PDB file
     structure = bs.read(pdb_file, bs.PDBFormat)
+
     # Count the number of heavy atoms
     n_atoms = bs.countatoms(structure, bs.heavyatomselector)
 
@@ -66,7 +83,7 @@ function get_contacts(pdb_file::String)
     mat_coords = reshape(flatten_coords, 3, n_atoms)
     
     # Compute pairwise distances between atoms
-    # pairwisw and Euclidean methods are from Distance module.
+    # pairwise and Euclidean methods are from Distance module.
     pairwise_distance = pairwise(Euclidean(), mat_coords; dims=2)
     
     # Collect heavy atoms and their residue indices
@@ -76,10 +93,10 @@ function get_contacts(pdb_file::String)
     # Initialize a set to store unique contacts
     contact_set = Set{Tuple{Int32, Int32}}()
 
-    # Check for contacts based on distance and residue separation
+    # # Check for contacts based on distance, residue separation, and B-factor threshold
     for i in 1:n_atoms
         for j in i+1:n_atoms
-            if pairwise_distance[i, j] < 4.5 && abs(resid_atom[j] - resid_atom[i]) > 10
+            if pairwise_distance[i, j] <= 4.5 && abs(resid_atom[j] - resid_atom[i]) >= 10 && min(bs.tempfactor(heavyatoms[i]), bs.tempfactor(heavyatoms[j])) >= bfactor_threshold
                 push!(contact_set, (resid_atom[i], resid_atom[j]))
             end
         end
@@ -217,9 +234,22 @@ function parse_commandline()
             help = "Output directory"
             arg_type = String
             default = "./"
+        "--BFactor", "-b"
+            help =  "B-factor threshold, encodes of confidence score for AF structure"
+            arg_type = String
+            default = "0.0"
     end
 
-    return parse_args(s)
+    args = parse_args(s)
+    # Convert B-factor threshold to numeric type
+    try
+        args["BFactor"] = parse(Float64, args["BFactor"])
+    catch
+        error("Invalid B-factor threshold: $(args["BFactor"]). Must be a number.")
+    end
+    return args
+
+    # return parse_args(s)
 end
 
 function warmup_calculations(pdb_file::String)
@@ -233,6 +263,7 @@ function main()
     # pdb_file = args["PDB"]
     pdb_file = get(args, "PDB", "")
     output_dir = get(args, "Output", "./")
+    bfactor_threshold = get(args, "BFactor", 0.0)
 
     if isempty(pdb_file)
         println("Error: PDB file argument is required.")
@@ -253,10 +284,10 @@ function main()
 
     try
         coor = read_coordinates(pdb_file)
-        contacts = get_contacts(pdb_file)
+        contacts = get_contacts(pdb_file, bfactor_threshold)
         i1, i2, j1, j2, maxG = GLN(coor, contacts)
-        @printf("%s, [(%d, %d) | (%d, %d)], %.3f\n", base_name, i1, i2, j1, j2, maxG)
-        @printf(io, "%s, [(%d, %d) | (%d, %d)], %.3f\n", base_name, i1, i2, j1, j2, maxG)
+        @printf("%s; [(%d, %d) | (%d, %d)]; %.3f\n", base_name, i1, i2, j1, j2, maxG)
+        @printf(io, "%s; [(%d, %d) | (%d, %d)]; %.3f\n", base_name, i1, i2, j1, j2, maxG)
     catch err
         println("Error processing $pdb_file: $err")
     finally
