@@ -173,8 +173,8 @@ function wh_GLN(coor::Matrix{Float64}, contacts)
             Why 12: For N terminal, range of N-thread is from j1=6 and j2 = i1-6
             if i1 < 12 meanning [j1:j2]=0
             """
-            j1, j2 = 6, i1-6
-            @fastmath @inbounds res = sum(@view(dot_cross_matrix[i1:i2-1, j1:j2])) / (4 * pi) # i1-6 is included
+            j1, j2 = 6, i1-6 # i1-6 is included
+            @fastmath @inbounds res = sum(@view(dot_cross_matrix[i1:i2-1, j1:j2])) / (4 * pi)
             GLN_N = res
             # @printf("GLN_N: %.3f", GLN_N)
         else
@@ -184,8 +184,8 @@ function wh_GLN(coor::Matrix{Float64}, contacts)
         end
         # GC
         if i2 < len_coor - 12
-            j1, j2 = i2+5, len_coor - 6
-            @fastmath @inbounds res = sum(@view(dot_cross_matrix[i1:i2-1, j1:j2])) / (4 * pi) # i1-6 is included
+            j1, j2 = i2+6, len_coor - 6 #len_coor -6 is included
+            @fastmath @inbounds res = sum(@view(dot_cross_matrix[i1:i2-1, j1:j2])) / (4 * pi)
             GLN_C = res
             # @printf("GLN_C: %.3f", GLN_C)
         else
@@ -193,7 +193,7 @@ function wh_GLN(coor::Matrix{Float64}, contacts)
             # @printf("GLN_C: %.3f", GLN_C)
         end
 
-        if GLN_N >= 0.6 || GLN_C >=0.6
+        if abs(GLN_N) >= 0.6 || abs(GLN_C) >=0.6
             @printf("(%3d \t %3d): \t %6.3f \t %6.3f\n", i1, i2, GLN_N, GLN_C)
         end
         # @printf("(%3d \t %3d): \t (%3d \t %3d) \t %6.3f \t (%3d \t %3d) \t %6.3f\n", loop_i1, loop_i2, thread_N_j1, thread_N_j2, GLN_N, thread_C_j1, thread_C_j2, GLN_C)
